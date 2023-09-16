@@ -11,7 +11,8 @@ crate-type = ["staticlib"]
 [dependencies]
 chrono = "*"
 cxx = "*"
-zip = { version = "*", default-features = false, features = ["zstd"] }
+zip = { version = "*", default-features = false, features = ["zstd", "time"] }
+time = {version = "*", features = ["local-offset"]}
 walkdir = "*"
 
 [build-dependencies]

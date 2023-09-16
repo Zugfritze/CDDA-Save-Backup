@@ -6,8 +6,9 @@ use std::{
     iter::Iterator,
     path::Path,
 };
+use time::{OffsetDateTime, UtcOffset};
 use walkdir::WalkDir;
-use zip::{result::ZipError, write::FileOptions};
+use zip::{result::ZipError, write::FileOptions, DateTime};
 
 #[cxx::bridge]
 mod ffi {
@@ -52,14 +53,21 @@ fn backup_save(save_path: &str, zip_dir_path: &str) -> zip::result::ZipResult<()
 
     let save_path_walkdir = WalkDir::new(save_path).into_iter().filter_map(|e| e.ok());
 
+    let local_utcoffset = UtcOffset::current_local_offset().unwrap();
+
     let mut zip = zip::ZipWriter::new(zip_file);
-    let zip_options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Zstd)
-        .unix_permissions(0o755);
 
     let mut buffer = Vec::new();
     for entry in save_path_walkdir {
         let path = entry.path();
+        let path_datetime: OffsetDateTime = path.metadata()?.modified()?.into();
+
+        let zip_options = FileOptions::default()
+            .compression_method(zip::CompressionMethod::Zstd)
+            .unix_permissions(0o755)
+            .last_modified_time(
+                DateTime::try_from(path_datetime.to_offset(local_utcoffset)).unwrap(),
+            );
 
         if path.is_file() {
             zip.start_file(path_as_string(path), zip_options)?;
