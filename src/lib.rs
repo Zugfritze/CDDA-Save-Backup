@@ -35,6 +35,8 @@ fn backup_save(save_path: &str, zip_dir_path: &str) -> zip::result::ZipResult<()
         return Err(ZipError::FileNotFound);
     }
 
+    let save_base_path = save_path.parent().unwrap();
+
     let save_name = save_path
         .file_name()
         .ok_or(ZipError::FileNotFound)?
@@ -61,6 +63,7 @@ fn backup_save(save_path: &str, zip_dir_path: &str) -> zip::result::ZipResult<()
     for entry in save_path_walkdir {
         let path = entry.path();
         let path_datetime: OffsetDateTime = path.metadata()?.modified()?.into();
+        let path_inside_zip = path.strip_prefix(save_base_path).unwrap();
 
         let zip_options = FileOptions::default()
             .compression_method(zip::CompressionMethod::Zstd)
@@ -70,13 +73,13 @@ fn backup_save(save_path: &str, zip_dir_path: &str) -> zip::result::ZipResult<()
             );
 
         if path.is_file() {
-            zip.start_file(path_as_string(path), zip_options)?;
+            zip.start_file(path_as_string(path_inside_zip), zip_options)?;
             let mut file = File::open(path)?;
             file.read_to_end(&mut buffer)?;
             zip.write_all(&buffer)?;
             buffer.clear();
         } else if !path.as_os_str().is_empty() {
-            zip.add_directory(path_as_string(path), zip_options)?;
+            zip.add_directory(path_as_string(path_inside_zip), zip_options)?;
         }
     }
     zip.finish()?;
