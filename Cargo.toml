@@ -1,22 +1,9 @@
-[package]
-name = "cdda_save_backup"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[lib]
-crate-type = ["staticlib"]
-
-[dependencies]
-chrono = "*"
-cxx = "*"
-zip = { version = "*", default-features = false, features = ["zstd", "time"] }
-time = {version = "*", features = ["local-offset"]}
-walkdir = "*"
-
-[build-dependencies]
-cxx-build = "*"
+[workspace]
+members = [
+    "cdda_save_backup",
+    "cdda_read_save_backup"
+]
+resolver = "2"
 
 [profile.release]
 opt-level = 3
