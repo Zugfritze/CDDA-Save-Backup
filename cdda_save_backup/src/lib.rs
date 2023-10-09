@@ -6,7 +6,7 @@ use std::{
     fs::{self, File},
     io::{BufReader, BufWriter, Read, Write},
     iter::Iterator,
-    path::{Path, PathBuf},
+    path::Path,
 };
 use time::{OffsetDateTime, UtcOffset};
 use walkdir::WalkDir;
@@ -29,11 +29,11 @@ pub fn cxx_backup_save(save_path: &CxxString, zip_dir_path: &CxxString) -> bool 
         Ok(path) => path,
         Err(_) => return false,
     };
-    let zip_path = match zip_dir_path.to_str() {
+    let zip_dir_path = match zip_dir_path.to_str() {
         Ok(path) => path,
         Err(_) => return false,
     };
-    backup_save(save_path, zip_path).is_ok()
+    backup_save(save_path, zip_dir_path).is_ok()
 }
 
 fn backup_save(save_path: &str, zip_dir_path: &str) -> ZipResult<()> {
@@ -112,7 +112,10 @@ pub fn read_backup_save(backup_save_path: &str, output_directory: Option<&str>) 
         let zip_entry = zip.by_index(entry)?;
         let zip_entry_path = match output_directory {
             Some(directory) => Path::new(directory).join(zip_entry.enclosed_name().unwrap()),
-            None => Path::new(backup_save_path).parent().unwrap().join(zip_entry.enclosed_name().unwrap()),
+            None => Path::new(backup_save_path)
+                .parent()
+                .unwrap()
+                .join(zip_entry.enclosed_name().unwrap()),
         };
         if zip_entry.is_file() {
             let dir = zip_entry_path.parent().unwrap();
